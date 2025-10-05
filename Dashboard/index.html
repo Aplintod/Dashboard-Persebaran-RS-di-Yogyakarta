@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Persebaran Rumah Sakit di Kota Yogyakarta</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .sidebar-transition {
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 122, 255, 0.1);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .dark .bg-white {
+            background-color: #1f2937;
+        }
+        
+        .dark .text-gray-900 {
+            color: #f9fafb;
+        }
+        
+        .dark .text-gray-600 {
+            color: #d1d5db;
+        }
+        
+        .dark .border-gray-200 {
+            border-color: #374151;
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 transition-colors duration-300">
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform -translate-x-full lg:translate-x-0 sidebar-transition">
+        <div class="flex items-center justify-center h-16 bg-blue-600">
+            <h1 class="text-white text-lg font-semibold">RS Online Yogyakarta</h1>
+        </div>
+        <nav class="mt-8">
+            <a href="#" onclick="showSection('dashboard')" class="nav-item flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                <i class="fas fa-tachometer-alt mr-3"></i>
+                Dashboard
+            </a>
+            <a href="#" onclick="showSection('map')" class="nav-item flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                <i class="fas fa-map-marked-alt mr-3"></i>
+                Peta Persebaran
+            </a>
+            <a href="#" onclick="showSection('data')" class="nav-item flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                <i class="fas fa-database mr-3"></i>
+                Data Rumah Sakit
+            </a>
+            <a href="#" onclick="showSection('statistics')" class="nav-item flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                <i class="fas fa-chart-bar mr-3"></i>
+                Statistik & Analisis
+            </a>
+            <a href="#" onclick="showSection('about')" class="nav-item flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                <i class="fas fa-info-circle mr-3"></i>
+                Tentang
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="flex items-center justify-between px-6 py-4">
+                <div class="flex items-center">
+                    <button id="sidebar-toggle" class="lg:hidden text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div class="ml-4 lg:ml-0">
+                        <h1 class="text-2xl font-bold text-gray-900">Dashboard Persebaran Rumah Sakit</h1>
+                        <p class="text-gray-600 mt-1">Kota Yogyakarta - Analisis Data Spasial dan Statistik</p>
+                    </div>
+                </div>
+                <button id="dark-toggle" class="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-moon text-gray-600"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="p-6">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-sm p-6 card-hover animate-fade-in">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-blue-100">
+                            <i class="fas fa-hospital text-blue-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">Total Rumah Sakit</p>
+                            <p class="text-2xl font-bold text-gray-900">21</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-sm p-6 card-hover animate-fade-in">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-green-100">
+                            <i class="fas fa-user-md text-green-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">Total Dokter</p>
+                            <p class="text-2xl font-bold text-gray-900">270</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-sm p-6 card-hover animate-fade-in">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-purple-100">
+                            <i class="fas fa-bed text-purple-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">Total Tempat Tidur</p>
+                            <p class="text-2xl font-bold text-gray-900">1443</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-sm p-6 card-hover animate-fade-in">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-orange-100">
+                            <i class="fas fa-chart-pie text-orange-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-600">RS Umum : Khusus</p>
+                            <p class="text-2xl font-bold text-gray-900">13 : 8</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map Container -->
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-8 animate-fade-in">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Peta Interaktif Persebaran Rumah Sakit</h2>
+                <div class="rounded-lg overflow-hidden" style="height: 500px;">
+                    <iframe 
+                        src="https://aplintod.github.io/Web-Persebaran-RS-di-Kota-Yogyakarta/" 
+                        width="100%" 
+                        height="100%" 
+                        frameborder="0"
+                        class="rounded-lg">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Section -->
+        <div id="map-section" class="p-6 hidden">
+            <div class="bg-white rounded-xl shadow-sm p-6 animate-fade-in">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Peta Persebaran Rumah Sakit</h2>
+                <div class="rounded-lg overflow-hidden" style="height: 600px;">
+                    <iframe 
+                        src="https://aplintod.github.io/Web-Persebaran-RS-di-Kota-Yogyakarta/" 
+                        width="100%" 
+                        height="100%" 
+                        frameborder="0"
+                        class="rounded-lg">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Section -->
+        <div id="data-section" class="p-6 hidden">
+            <div class="bg-white rounded-xl shadow-sm p-6 animate-fade-in">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4 lg:mb-0">Data Rumah Sakit</h2>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <input type="text" id="search-input" placeholder="Cari rumah sakit..." class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <select id="class-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Semua Kelas</option>
+                            <option value="A">Kelas A</option>
+                            <option value="B">Kelas B</option>
+                            <option value="C">Kelas C</option>
+                            <option value="D">Kelas D</option>
+                        </select>
+                        <button onclick="exportData()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-download mr-2"></i>Export CSV
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-container overflow-x-auto">
+                    <table id="hospital-table" class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(0)">
+                                    Nama RS <i class="fas fa-sort ml-1"></i>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(1)">
+                                    Kelas <i class="fas fa-sort ml-1"></i>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(2)">
+                                    VVIP <i class="fas fa-sort ml-1"></i>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(3)">
+                                    VIP <i class="fas fa-sort ml-1"></i>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(4)">
+                                    Kelas I <i class="fas fa-sort ml-1"></i>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(5)">
+                                    Kelas II <i class="fas fa-sort ml-1"></i>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(6)">
+                                    Kelas III <i class="fas fa-sort ml-1"></i>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(7)">
+                                    Dokter <i class="fas fa-sort ml-1"></i>
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" onclick="sortTable(8)">
+                                    Jenis <i class="fas fa-sort ml-1"></i>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="flex items-center justify-between mt-6">
+                    <div class="text-sm text-gray-700">
+                        Menampilkan <span id="showing-start">1</span> - <span id="showing-end">10</span> dari <span id="total-records">21</span> data
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="previousPage()" class="px-3 py-2 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span id="page-info" class="px-3 py-2 text-sm text-gray-700">1 / 3</span>
+                        <button onclick="nextPage()" class="px-3 py-2 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div id="statistics-section" class="p-6 hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white rounded-xl shadow-sm p-6 animate-fade-in">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Jumlah Dokter per Rumah Sakit</h3>
+                    <div class="chart-container">
+                        <canvas id="doctorChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-sm p-6 animate-fade-in">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Proporsi Rumah Sakit berdasarkan Kelas</h3>
+                    <div class="chart-container">
+                        <canvas id="classChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm p-6 animate-fade-in">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Distribusi Tempat Tidur berdasarkan Tipe Ruangan</h3>
+                <div class="chart-container">
+                    <canvas id="bedChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Section -->
+        <div id="about-section" class="p-6 hidden">
+            <div class="bg-white rounded-xl shadow-sm p-6 animate-fade-in">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">Tentang Proyek</h2>
+                <div class="prose max-w-none">
+                    <p class="text-gray-600 mb-4">
+                        Dashboard Persebaran Rumah Sakit di Kota Yogyakarta adalah platform analisis data spasial dan statistik 
+                        yang dirancang untuk memberikan informasi komprehensif mengenai fasilitas kesehatan di wilayah Kota Yogyakarta.
+                    </p>
+                    <p class="text-gray-600 mb-6">
+                        Platform ini menggabungkan teknologi Sistem Informasi Geografis (SIG) dengan visualisasi data interaktif 
+                        untuk memudahkan analisis distribusi dan karakteristik rumah sakit di Yogyakarta.
+                    </p>
+                    
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Fitur Utama</h3>
+                    <ul class="list-disc list-inside text-gray-600 mb-6 space-y-2">
+                        <li>Peta interaktif dengan lokasi rumah sakit</li>
+                        <li>Data lengkap fasilitas dan kapasitas rumah sakit</li>
+                        <li>Visualisasi statistik dengan grafik interaktif</li>
+                        <li>Filter dan pencarian data yang fleksibel</li>
+                        <li>Export data dalam format CSV</li>
+                        <li>Desain responsif untuk semua perangkat</li>
+                    </ul>
+                    
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Teknologi yang Digunakan</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div class="text-center p-4 bg-gray-50 rounded-lg">
+                            <i class="fab fa-js-square text-3xl text-yellow-500 mb-2"></i>
+                            <p class="text-sm font-medium">JavaScript</p>
+                        </div>
+                        <div class="text-center p-4 bg-gray-50 rounded-lg">
+                            <i class="fab fa-css3-alt text-3xl text-blue-500 mb-2"></i>
+                            <p class="text-sm font-medium">Tailwind CSS</p>
+                        </div>
+                        <div class="text-center p-4 bg-gray-50 rounded-lg">
+                            <i class="fas fa-chart-bar text-3xl text-green-500 mb-2"></i>
+                            <p class="text-sm font-medium">Chart.js</p>
+                        </div>
+                        <div class="text-center p-4 bg-gray-50 rounded-lg">
+                            <i class="fas fa-map text-3xl text-red-500 mb-2"></i>
+                            <p class="text-sm font-medium">QGIS2Web</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="bg-white border-t border-gray-200 mt-12">
+            <div class="px-6 py-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Mini Project 2 Praktikum SIG</h3>
+                        <p class="text-gray-600">Nama : Alvin Ari Pradhana</p>
+                        <p class="text-gray-600">NIM : 2309116063</p>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Sumber Data</h3>
+                        <a class="text-gray-600" href="https://www.indonesia-geospasial.com/p/sitemap.html">Indonesia Geospasial</a>
+                        <a class="text-gray-600" href="https://sirs.kemkes.go.id/fo/home/dashboard_rs?id=0">Sistem Informasi Rumah Sakit Kementerian kesehatan</a>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Keterangan</h3>
+                        <p class="text-gray-600">Mini Project 2 Praktikum SIG - Sistem Informasi 2023</p>
+                        <p class="text-gray-600">WebGIS Menggunakan QGIS2Web</p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Sample hospital data
+        const hospitalData = [
+            {name: "RS PKU Muhammadiyah Yogyakarta", class: "B", vvip: 3, vip: 21, kelas1: 20, kelas2: 23, kelas3: 63, doctors: 21, type: "Umum"},
+            {name: "RS Bethesda Yogyakarta", class: "B", vvip: 27, vip: 62, kelas1: 48, kelas2: 38, kelas3: 64, doctors: 24, type: "Umum"},
+            {name: "RS Panti Rapih", class: "B", vvip: 24, vip: 36, kelas1: 40, kelas2: 42, kelas3: 50, doctors: 34, type: "Umum"},
+            {name: "RS Ludira Husada Tama", class: "D", vvip: 0, vip: 1, kelas1: 23, kelas2: 4, kelas3: 10, doctors: 19, type: "Umum"},
+            {name: "RS Bethesda Lempuyangwangi", class: "D", vvip: 0, vip: 3, kelas1: 2, kelas2: 11, kelas3: 17, doctors: 12, type: "Umum"},
+            {name: "RS AMC Muhammadiyah", class: "D", vvip: 0, vip: 8, kelas1: 12, kelas2: 15, kelas3: 33, doctors: 8, type: "Umum"},
+            {name: "RS DKT Dr. Soetarto", class: "C", vvip: 1, vip: 4, kelas1: 15, kelas2: 22, kelas3: 39, doctors: 26, type: "Umum"},
+            {name: "RS Mata Dr. Yap", class: "D", vvip: 2, vip: 4, kelas1: 8, kelas2: 8, kelas3: 12, doctors: 6, type: "Khusus"},
+            {name: "RS Jiwa Puri Nirmala", class: "C", vvip: 0, vip: 1, kelas1: 5, kelas2: 8, kelas3: 12, doctors: 10, type: "Khusus"},
+            {name: "RSGM Universitas Muhammadiyah Yogyakarta ", class: "A", vvip: 0, vip: 2, kelas1: 2, kelas2: 0, kelas3: 8, doctors: 24, type: "Khusus"},
+            {name: "RS Happy Land", class: "C", vvip: 4, vip: 5, kelas1: 10, kelas2: 16, kelas3: 28, doctors: 13, type: "Umum"},
+            {name: "RSI Hidayatullah", class: "D", vvip: 8, vip: 0, kelas1: 35, kelas2: 15, kelas3: 22, doctors: 4, type: "Umum"},
+            {name: "RSIA Permata Bunda", class: "C", vvip: 0, vip: 2, kelas1: 2, kelas2: 8, kelas3: 8, doctors: 3, type: "Khusus"},
+            {name: "RSIA Dr. Ismangoen", class: "C", vvip: 1, vip: 6, kelas1: 2, kelas2: 2, kelas3: 4, doctors: 0, type: "Khusus"},
+            {name: "RSIA Fajar", class: "C", vvip: 0, vip: 0, kelas1: 0, kelas2: 0, kelas3: 0, doctors: 0, type: "Khusus"},
+            {name: "RS Siloam Yogyakarta", class: "C", vvip: 3, vip: 10, kelas1: 12, kelas2: 12, kelas3: 31, doctors: 18, type: "Umum"},
+            {name: "RSIA PKU Muhammadiyah Kotagede", class: "C", vvip: 0, vip: 4, kelas1: 5, kelas2: 7, kelas3: 6, doctors: 8, type: "Khusus"},
+            {name: "RS Khusus Bedah Soedirman", class: "C", vvip: 0, vip: 0, kelas1: 0, kelas2: 0, kelas3: 0, doctors: 0, type: "Khusus"},
+            {name: "RSIA Rachmi", class: "C", vvip: 1, vip: 0, kelas1: 2, kelas2: 0, kelas3: 10, doctors: 7, type: "Khusus"},
+            {name: "RS Pratama", class: "D", vvip: 0, vip: 0, kelas1: 0, kelas2: 0, kelas3: 34, doctors: 8, type: "Umum"},
+            {name: "RSUD Kota Yogyakarta", class: "B", vvip: 0, vip: 15, kelas1: 37, kelas2: 90, kelas3: 123, doctors: 25, type: "Umum"}
+        ];
+
+        let currentPage = 1;
+        let itemsPerPage = 10;
+        let filteredData = [...hospitalData];
+        let sortDirection = {};
+
+        // Navigation functions
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('[id$="-section"]').forEach(el => el.classList.add('hidden'));
+            
+            // Show selected section
+            document.getElementById(section + '-section').classList.remove('hidden');
+            
+            // Update active nav item
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('bg-blue-50', 'text-blue-600');
+                el.classList.add('text-gray-700');
+            });
+            event.target.closest('.nav-item').classList.add('bg-blue-50', 'text-blue-600');
+            event.target.closest('.nav-item').classList.remove('text-gray-700');
+
+            // Initialize charts if statistics section
+            if (section === 'statistics') {
+                setTimeout(initCharts, 100);
+            }
+        }
+
+        // Sidebar toggle
+        document.getElementById('sidebar-toggle').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        });
+
+        // Dark mode toggle
+        document.getElementById('dark-toggle').addEventListener('click', function() {
+            document.documentElement.classList.toggle('dark');
+            const icon = this.querySelector('i');
+            if (document.documentElement.classList.contains('dark')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        });
+
+        // Table functions
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageData = filteredData.slice(start, end);
+
+            tbody.innerHTML = pageData.map(hospital => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${hospital.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${getClassColor(hospital.class)}">${hospital.class}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${hospital.vvip}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${hospital.vip}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${hospital.kelas1}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${hospital.kelas2}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${hospital.kelas3}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${hospital.doctors}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${hospital.type === 'Umum' ? 'bg-green-100 text-green-800' : 'bg-purple-100 text-purple-800'}">${hospital.type}</span>
+                    </td>
+                </tr>
+            `).join('');
+
+            updatePagination();
+        }
+
+        function getClassColor(classType) {
+            const colors = {
+                'A': 'bg-red-100 text-red-800',
+                'B': 'bg-yellow-100 text-yellow-800',
+                'C': 'bg-blue-100 text-blue-800',
+                'D': 'bg-gray-100 text-gray-800'
+            };
+            return colors[classType] || 'bg-gray-100 text-gray-800';
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            const start = (currentPage - 1) * itemsPerPage + 1;
+            const end = Math.min(currentPage * itemsPerPage, filteredData.length);
+
+            document.getElementById('showing-start').textContent = start;
+            document.getElementById('showing-end').textContent = end;
+            document.getElementById('total-records').textContent = filteredData.length;
+            document.getElementById('page-info').textContent = `${currentPage} / ${totalPages}`;
+        }
+
+        function sortTable(columnIndex) {
+            const columns = ['name', 'class', 'vvip', 'vip', 'kelas1', 'kelas2', 'kelas3', 'doctors', 'type'];
+            const column = columns[columnIndex];
+            
+            if (!sortDirection[column]) sortDirection[column] = 'asc';
+            else sortDirection[column] = sortDirection[column] === 'asc' ? 'desc' : 'asc';
+
+            filteredData.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+                
+                if (typeof aVal === 'string') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+                
+                if (sortDirection[column] === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        function filterData() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const classFilter = document.getElementById('class-filter').value;
+
+            filteredData = hospitalData.filter(hospital => {
+                const matchesSearch = hospital.name.toLowerCase().includes(searchTerm);
+                const matchesClass = !classFilter || hospital.class === classFilter;
+                return matchesSearch && matchesClass;
+            });
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        }
+
+        function exportData() {
+            const csv = [
+                ['Nama RS', 'Kelas', 'VVIP', 'VIP', 'Kelas I', 'Kelas II', 'Kelas III', 'Dokter', 'Jenis'],
+                ...filteredData.map(hospital => [
+                    hospital.name, hospital.class, hospital.vvip, hospital.vip,
+                    hospital.kelas1, hospital.kelas2, hospital.kelas3, hospital.doctors, hospital.type
+                ])
+            ].map(row => row.join(',')).join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'data-rumah-sakit-yogyakarta.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Chart initialization
+        function initCharts() {
+            // Doctor chart
+            const doctorCtx = document.getElementById('doctorChart').getContext('2d');
+            new Chart(doctorCtx, {
+                type: 'bar',
+                data: {
+                    labels: hospitalData.slice(0, 10).map(h => h.name.length > 20 ? h.name.substring(0, 20) + '...' : h.name),
+                    datasets: [{
+                        label: 'Jumlah Dokter',
+                        data: hospitalData.slice(0, 10).map(h => h.doctors),
+                        backgroundColor: '#007AFF',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            // Class distribution chart
+            const classCtx = document.getElementById('classChart').getContext('2d');
+            const classCount = hospitalData.reduce((acc, h) => {
+                acc[h.class] = (acc[h.class] || 0) + 1;
+                return acc;
+            }, {});
+
+            new Chart(classCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(classCount),
+                    datasets: [{
+                        data: Object.values(classCount),
+                        backgroundColor: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Bed distribution chart
+            const bedCtx = document.getElementById('bedChart').getContext('2d');
+            new Chart(bedCtx, {
+                type: 'bar',
+                data: {
+                    labels: hospitalData.slice(0, 8).map(h => h.name.length > 15 ? h.name.substring(0, 15) + '...' : h.name),
+                    datasets: [
+                        {
+                            label: 'VVIP',
+                            data: hospitalData.slice(0, 8).map(h => h.vvip),
+                            backgroundColor: '#FF6B6B'
+                        },
+                        {
+                            label: 'VIP',
+                            data: hospitalData.slice(0, 8).map(h => h.vip),
+                            backgroundColor: '#4ECDC4'
+                        },
+                        {
+                            label: 'Kelas I',
+                            data: hospitalData.slice(0, 8).map(h => h.kelas1),
+                            backgroundColor: '#45B7D1'
+                        },
+                        {
+                            label: 'Kelas II',
+                            data: hospitalData.slice(0, 8).map(h => h.kelas2),
+                            backgroundColor: '#96CEB4'
+                        },
+                        {
+                            label: 'Kelas III',
+                            data: hospitalData.slice(0, 8).map(h => h.kelas3),
+                            backgroundColor: '#FECA57'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // Event listeners
+        document.getElementById('search-input').addEventListener('input', filterData);
+        document.getElementById('class-filter').addEventListener('change', filterData);
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderTable();
+            // Set dashboard as active by default
+            document.querySelector('.nav-item').classList.add('bg-blue-50', 'text-blue-600');
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'989c4ebc376b6034',t:'MTc1OTY2MDg5Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
